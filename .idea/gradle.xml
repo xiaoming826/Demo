@@ -10,7 +10,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/alltextview" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/monkeys" />
             <option value="$PROJECT_DIR$/mute" />
           </set>
         </option>
