@@ -1,5 +1,8 @@
 package com.ericcode.monkeys.ui;
 
+import android.animation.Animator;
+import android.animation.TypeEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -22,9 +25,9 @@ import java.util.Random;
 /**
  * Created by zhoushengming on 16/1/19.
  */
-public class MonkeysViewPuls extends View {
-	private static final String TAG = MonkeysViewPuls.class.getSimpleName();
-	int MAX_MONKEY_COUNT = 40;
+public class MonkeysViewByValueAnimator extends View {
+	private static final String TAG = MonkeysViewByValueAnimator.class.getSimpleName();
+	int MAX_MONKEY_COUNT = 60;
 	// 图片
 	Bitmap bitmap_monkey = null;
 	// 画笔
@@ -36,13 +39,13 @@ public class MonkeysViewPuls extends View {
 	// 屏幕的高度和宽度
 	int view_height = 0;
 	int view_width = 0;
-	float MAX_SPEED = 5f;
+	float MAX_SPEED = 30f;
 	private MyHandler myHandler;
 
 	/**
 	 * 构造器
 	 */
-	public MonkeysViewPuls(Context context, AttributeSet attrs, int defStyle) {
+	public MonkeysViewByValueAnimator(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		loadMonkeImage();
 		myHandler = new MyHandler();
@@ -52,7 +55,7 @@ public class MonkeysViewPuls extends View {
 		addRandomMonkey();
 	}
 
-	public MonkeysViewPuls(Context context, AttributeSet attrs) {
+	public MonkeysViewByValueAnimator(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
 
@@ -95,10 +98,9 @@ public class MonkeysViewPuls extends View {
 	 */
 	public void addRandomMonkey() {
 		for (int i = 0; i < MAX_MONKEY_COUNT; i++) {
-//			monkeys[i] = new Monkey(random.nextInt(view_width), 0,random.nextInt(MAX_SPEED));
 			monkeys[i] = new Monkey(random.nextInt(view_width), getRandomInt(-view_height, 0),
 					getRandomDouble(MAX_SPEED/1.4f, MAX_SPEED));
-			Log.i(TAG, "onDraw: monkeys: " + i + monkeys[i]);
+			Log.i(TAG, "addRandomMonkey: monkeys: " + i + monkeys[i]);
 		}
 	}
 
@@ -106,51 +108,97 @@ public class MonkeysViewPuls extends View {
 		if (min > max) {
 			throw new RuntimeException("min > max");
 		}
-		double v = Math.random() * (max - min);
-		double v1 = min + v;
-		return (int) (v1);
-//		return (int)(min+Math.random()*(max-min));
+		return (int) (min + Math.random() * (max - min));
 	}
 
-	private double getRandomDouble(float min, float max) {
+
+	private float getRandomDouble(float min, float max) {
 		if (min > max) {
 			throw new RuntimeException("min > max");
 		}
-		double v = Math.random() * (max - min);
-		double v1 = min + v;
+		float v = (float) (Math.random() * (max - min));
+		float v1 = min + v;
 		return (v1);
 //		return (int)(min+Math.random()*(max-min));
 	}
 
 	@Override
 	public void onDraw(Canvas canvas) {
-		super.onDraw(canvas);
 		for (int i = 0; i < MAX_MONKEY_COUNT; i += 1) {
-			//  下落的速度
-			monkeys[i].coordinate.y += monkeys[i].speed;
-			// 飘动的效果
-
-//			if (Math.random()<0.2) {
-//
-//	//			// 随机产生一个数字，让图片有水平移动的效果
-//				int tmp = (int) (MAX_SPEED/2 - random.nextInt((int)MAX_SPEED)-0.5);
-//	//			//为了动画的自然性，如果水平的速度大于图片的下落速度，那么水平的速度我们取下落的速度。
-//				monkeys[i].point.x += monkeys[i].speed < tmp ? monkeys[i].speed : tmp;
-//			}
-			canvas.drawBitmap(bitmap_monkey, monkeys[i].coordinate.x,//((float) monkeys[i].point.x)
-					((float) monkeys[i].coordinate.y), mPaint);
-			if (monkeys[i].coordinate.x >= (view_width + bitmap_monkey.getWidth()) || monkeys[i].coordinate.y >=
+			if (monkeys[i].isMove==false) {
+				monkeys[i].isMove=true;
+				startAnimation(i);
+				drawMonkey(canvas, i);
+			} else {
+				drawMonkey(canvas, i);
+			}
+			if (monkeys[i].point.x >= (view_width ) || monkeys[i].point.y >=
 					(view_height + bitmap_monkey.getHeight())) {
-//				Log.i(TAG, "onDraw: monkeys: "+i+monkeys[i]);
-				monkeys[i].coordinate.y = -bitmap_monkey.getHeight();
-				monkeys[i].coordinate.x = random.nextInt(view_width);
+				monkeys[i].point.y = -bitmap_monkey.getHeight();
+				monkeys[i].point.x = random.nextInt(view_width);
+				monkeys[i].isMove=false;
 			}
 		}
-		invalidate();
-		Message message = myHandler.obtainMessage();
-		myHandler.sendMessageDelayed(message, 30);
-//		myHandler.sendMessage(message);
+
 	}
+
+	private void drawMonkey(Canvas canvas, int i) {
+		canvas.drawBitmap(bitmap_monkey, monkeys[i].point.x,//((float) monkeys[i].point.x)
+				monkeys[i].point.y, mPaint);
+	}
+
+	private void startAnimation(final int i) {
+		Point startPoint = new Point(monkeys[i].point.x, monkeys[i].point.y);
+		//monkeys[i].point.y
+		Point endPoint = new Point(monkeys[i].point.x, getHeight() + bitmap_monkey
+				.getHeight());
+		ValueAnimator anim = ValueAnimator.ofObject(new PointEvaluator(), startPoint, endPoint);
+		anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				monkeys[i].point = (Point) animation.getAnimatedValue();
+				invalidate();
+			}
+		});
+		anim.addListener(new Animator.AnimatorListener() {
+			@Override
+			public void onAnimationStart(Animator animation) {
+
+			}
+
+			@Override
+			public void onAnimationEnd(Animator animation) {
+				invalidate();
+			}
+
+			@Override
+			public void onAnimationCancel(Animator animation) {
+
+			}
+
+			@Override
+			public void onAnimationRepeat(Animator animation) {
+
+			}
+		});
+		anim.setDuration((long) (100 * monkeys[i].speed));
+		anim.start();
+	}
+
+	class PointEvaluator implements TypeEvaluator {
+
+		@Override
+		public Object evaluate(float fraction, Object startValue, Object endValue) {
+			Point startPoint = (Point) startValue;
+			Point endPoint = (Point) endValue;
+			int x = (int) (startPoint.getX() + fraction * (endPoint.getX() - startPoint.getX()));
+			int y = (int) (startPoint.getY() + fraction * (endPoint.getY() - startPoint.getY()));
+			Point point = new Point(x, y);
+			return point;
+		}
+
+	}
+
 
 	class MyHandler extends Handler {
 		@Override
@@ -161,11 +209,12 @@ public class MonkeysViewPuls extends View {
 
 
 	class Monkey {
-		Coordinate coordinate;
-		double speed;
+		Point point;
+		float speed;
+		boolean isMove=false;
 
-		public Monkey(int x, int y, double speed) {
-			coordinate = new Coordinate(x, y);
+		public Monkey(int x, int y, float speed) {
+			point = new Point(x, y);
 			this.speed = speed;
 			if (this.speed == 0) {
 				this.speed = 1;
@@ -175,20 +224,29 @@ public class MonkeysViewPuls extends View {
 		@Override
 		public String toString() {
 			return "Monkey{" +
-					"point=" + coordinate +
+					"point=" + point +
 					", speed=" + speed +
 					'}';
 		}
 	}
 
-	class Coordinate {
+	class Point {
 		public int x;
 		public int y;
 
-		public Coordinate(int newX, int newY) {
+		public Point(int newX, int newY) {
 			x = newX;
 			y = newY;
 		}
+
+		public float getX() {
+			return x;
+		}
+
+		public float getY() {
+			return y;
+		}
+
 
 		@Override
 		public String toString() {

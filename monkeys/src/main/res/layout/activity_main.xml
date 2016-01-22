@@ -7,7 +7,18 @@
     tools:context="com.ericcode.monkeys.MainActivity">
 
 
-    <com.ericcode.monkeys.ui.MonkeysViewPuls
+    <com.ericcode.monkeys.ui.MonkeysViewByValueAnimator
+        android:id="@+id/monkeysViewByValueAnimator"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    <com.ericcode.monkeys.ui.MonkeysViewPuls
+        android:id="@+id/monkeysViewPuls"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <Button
+        android:onClick="click"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </RelativeLayout>
