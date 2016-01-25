@@ -1,24 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
+    android:id="@+id/rlRoot"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/holo_blue_light"
     tools:context="com.ericcode.monkeys.MainActivity">
 
-
-    <com.ericcode.monkeys.ui.MonkeysViewByValueAnimator
-        android:id="@+id/monkeysViewByValueAnimator"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-    <com.ericcode.monkeys.ui.MonkeysViewPuls
-        android:id="@+id/monkeysViewPuls"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
     <Button
-        android:onClick="click"
+        android:id="@+id/startAnimator50"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:onClick="click"
+        android:text="start"/>
+
+    <!--<LinearLayout
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false">
+
+        <Button
+            android:id="@+id/startAnimator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="click"
+            android:text="start"/>
+
+        <Button
+            android:id="@+id/startAnimator50"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="click"
+            android:text="start50monkeys"/>
+
+        <Button
+            android:id="@+id/startAnimator1000ms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="click"
+            android:text="start1s"/>
+        <Button
+            android:id="@+id/stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="click"
+
+            android:text="stop"/>
+    </LinearLayout>-->
+
+
 </RelativeLayout>

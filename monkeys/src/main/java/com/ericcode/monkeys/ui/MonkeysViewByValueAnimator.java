@@ -66,7 +66,7 @@ public class MonkeysViewByValueAnimator extends View {
 		Resources r = this.getContext().getResources();
 		bitmap_monkey = ((BitmapDrawable) r.getDrawable(R.drawable.monkey))
 				.getBitmap();
-		bitmap_monkey = zoomImage(bitmap_monkey, 0.3f);
+		bitmap_monkey = zoomImage(bitmap_monkey, 0.20f);
 	}
 
 	/**
