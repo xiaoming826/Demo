@@ -162,9 +162,11 @@ public class MonkeysViewPuls extends View {
 		return (v1);
 	}
 
+	long time = System.currentTimeMillis();
 	@Override
 	public void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
+
 		int minMonkeyY=view_height;
 		for (Monkey monkey : monkeys) {
 			if (monkey.coordinate.y<minMonkeyY) {
@@ -178,14 +180,16 @@ public class MonkeysViewPuls extends View {
 		for (int i = 0; i < monkeysCountInScreen; i += 1) {
 			//  下落的速度
 			monkeys[i].coordinate.y += monkeys[i].speed;
+			time=System.currentTimeMillis();
 			// 飘动的效果
 //			if (Math.random()<0.2) {
 //	//			// 随机产生一个数字，让图片有水平移动的效果
 //				int tmp = (int) (MAX_SPEED/2 - random.nextInt((int)MAX_SPEED)-0.5);
 //	//			//为了动画的自然性，如果水平的速度大于图片的下落速度，那么水平的速度我们取下落的速度。
-//				monkeys[i].point.x += monkeys[i].speed < tmp ? monkeys[i].speed : tmp;
+//				monkeys[i].startPoint.x += monkeys[i].speed < tmp ? monkeys[i].speed : tmp;
 //			}
-			canvas.drawBitmap(bitmap_monkey, monkeys[i].coordinate.x,//((float) monkeys[i].point.x)
+
+			canvas.drawBitmap(bitmap_monkey, monkeys[i].coordinate.x,//((float) monkeys[i].startPoint.x)
 					((float) monkeys[i].coordinate.y), mPaint);
 			if (monkeys[i].coordinate.x >= (view_width + bitmap_monkey.getWidth()) || monkeys[i].coordinate.y >=
 					(view_height + bitmap_monkey.getHeight())) {
@@ -241,7 +245,7 @@ public class MonkeysViewPuls extends View {
 		@Override
 		public String toString() {
 			return "Monkey{" +
-					"point=" + coordinate +
+					"startPoint=" + coordinate +
 					", speed=" + speed +
 					'}';
 		}
