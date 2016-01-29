@@ -4,7 +4,7 @@
     android:layout_height="fill_parent"
     android:orientation="vertical">
 
-    <com.ericcode.monkeys.ui.MonkeysViewByValueAnimator
+    <com.ericcode.monkeys.ui.DropEffectView
         android:id="@+id/monkeysViewByValueAnimator"
         android:onClick="click"
         android:layout_width="match_parent"

@@ -9,80 +9,75 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.os.Handler;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 
-import com.ericcode.monkeys.R;
+import com.ericcode.monkeys.Logger;
 
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by zhoushengming on 16/1/19.
  */
-public class MonkeysViewByValueAnimator extends View {
+public class DropEffectView extends View {
 
 	// 持续 8s
 	// 移动方向 各个方向
 	// 匀速
 	// 直线
 	// 大小 随机
-	private static final String TAG = MonkeysViewByValueAnimator.class.getSimpleName();
-	int MAX_MONKEY_COUNT = 50;
+	private static final String TAG = DropEffectView.class.getSimpleName();
+	private int MAX_MONKEY_COUNT = 40;
 	// 图片
-	Bitmap bitmap_monkey = null;
+	private Bitmap bitmap_monkey = null;
 	// 画笔
 	private final Paint mPaint = new Paint();
 	// 随即生成器
 	private static final Random random = new Random();
 
-	private Monkey[] monkeys = new Monkey[MAX_MONKEY_COUNT];
+	private Monkey[] monkeys;
 	private Animator[] animators = new Animator[MAX_MONKEY_COUNT];
 	// 屏幕的高度和宽度
-	int view_height = 0;
-	int view_width = 0;
-	float MAX_SPEED = 10f;
+	private int view_height;
+	private int view_width;
+	private float MAX_SPEED = 8f;
 
-	private final int MONKEY_MIN_WIDTH = 50;
-	private final int MONKEY_MAX_WIDTH = 80;
+	private int MONKEY_MIN_WIDTH;
+	private int MONKEY_MAX_WIDTH;
+	private Callback callback;
 
 
 	/**
 	 * 构造器
 	 */
-	public MonkeysViewByValueAnimator(Context context, AttributeSet attrs, int defStyle) {
+	public DropEffectView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-//		loadMonkeImage();
 		init();
 	}
 
 	private void init() {
-		bitmap_monkey = getMonkeyImage(MONKEY_MAX_WIDTH);
 		DisplayMetrics dm = new DisplayMetrics();
 		((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(dm);
 		setView(dm.heightPixels, dm.widthPixels);
-		addRandomMonkey();
 	}
 
-	public MonkeysViewByValueAnimator(Context context, AttributeSet attrs) {
+	public DropEffectView(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
 
-	public Bitmap getMonkeyImage(float width) {
+	public Bitmap getMonkeyImage(float width, int imageId) {
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
-		BitmapFactory.decodeResource(getResources(), R.drawable.monkey, options);
+		BitmapFactory.decodeResource(getResources(), imageId, options);
 		int imageWidth = options.outWidth;
 
 		options.inSampleSize = (int) (imageWidth / width);
 		options.inJustDecodeBounds = false;
 
-		return BitmapFactory.decodeResource(getResources(), R.drawable.monkey, options);
+		return BitmapFactory.decodeResource(getResources(), imageId, options);
 	}
 
 	/**
@@ -101,20 +96,23 @@ public class MonkeysViewByValueAnimator extends View {
 		final int row = 8;
 		final int height = -3 * view_height;
 		final int width = view_width;
+		monkeys = new Monkey[MAX_MONKEY_COUNT];
 		for (int i = 0; i < MAX_MONKEY_COUNT; i++) {
 			int startx = (width / (column - 1)) * (i % column);
 			int starty = (height / (row - 1)) * (i % row);    //(random.nextInt(row)+1);
 			int endx = (width / (column - 1)) * (random.nextInt(column));
-			int endy = view_height + MONKEY_MAX_WIDTH;
+			int endy = view_height;
 			float speed = getRandomDouble(MAX_SPEED / 1.2f, MAX_SPEED);
 			float monkeyWidth = getRandomDouble(MONKEY_MIN_WIDTH, MONKEY_MAX_WIDTH);
 
 			// 随机偏移量
-			startx += getRandomInt(-MONKEY_MAX_WIDTH / 2, 0);
+			startx += getRandomInt(-view_width / column / 2, view_width / column / 2);
 			starty += getRandomInt((height / (row - 1)), 0);
+			starty -= MONKEY_MAX_WIDTH;
+			endx += getRandomInt(-view_width / column / 2, view_width / column / 2);
 
 			if (startx < 0) {
-//				Log.i(TAG, "addRandomMonkey: startx< 0");
+//				Logger.i(TAG, "addRandomMonkey: startx< 0");
 				if (Math.random() > 0.5) {
 					startx = 0;
 					endx = view_width;
@@ -135,27 +133,26 @@ public class MonkeysViewByValueAnimator extends View {
 					Monkey monkey2 = monkeys[j];
 					int compare = monkey1.compareTo(monkey2);
 					if (compare < MONKEY_MIN_WIDTH) {
-//						Log.i(TAG, String.format("addRandomMonkey:one: %d, two: %d; compare:%d", i, j, compare));
-//						Log.i(TAG, i + "  " + monkeys[i].toString());
-//						Log.i(TAG, i + "  " + monkeys[j].toString());
+//						Logger.i(TAG, String.format("addRandomMonkey:one: %d, two: %d; compare:%d", i, j, compare));
+//						Logger.i(TAG, i + "  " + monkeys[i].toString());
+//						Logger.i(TAG, i + "  " + monkeys[j].toString());
 						if (monkey1.endPoint.x > view_width / 2) {
 							monkey1.endPoint.x -= view_width / 2;
 						} else {
 							monkey1.endPoint.x += view_width / 2;
 						}
-//						Log.i(TAG, i + " new " + monkeys[i].toString());
+//						Logger.i(TAG, i + " new " + monkeys[i].toString());
 					}
 				}
 			}
-
 		}
 	}
 
-	AtomicBoolean isShow = new AtomicBoolean(false);
 
 	@Override
 	public void onDraw(Canvas canvas) {
-		if (!isShow.get()) {
+		if (monkeys == null) {
+			Logger.w(TAG, "onDraw: monkeys is null");
 			return;
 		}
 		for (int i = 0; i < MAX_MONKEY_COUNT; i += 1) {
@@ -166,21 +163,12 @@ public class MonkeysViewByValueAnimator extends View {
 			} else {
 				drawMonkey(canvas, i);
 			}
-//			if (monkeys[i].startPoint.y >=
-//					(view_height + bitmap_monkey.getHeight())) {
-//				monkeys[i].startPoint.y = -bitmap_monkey.getHeight();
-//				monkeys[i].startPoint.x = getRandomInt(-bitmap_monkey.getWidth() / 2, view_width - bitmap_monkey
-// .getWidth()
-//						/ 2);
-//				monkeys[i].isMove = false;
-//				invalidate();
-//			}
 		}
 
 	}
 
-	long maxDuration = 0;
-	int slowMonkey = 0;
+	private long maxDuration = 0;
+	private int slowMonkey = 0;
 
 	private void startAnimation(final int i) {
 		int startX = monkeys[i].startPoint.x;
@@ -190,7 +178,7 @@ public class MonkeysViewByValueAnimator extends View {
 		float speed = monkeys[i].speed;
 
 		Point startPoint = new Point(startX, startY);
-		Point endPoint = new Point(endX, view_height + endY);
+		Point endPoint = new Point(endX, endY);
 		final ValueAnimator anim = ValueAnimator.ofObject(new PointEvaluator(), startPoint, endPoint);
 		anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 			                       @Override
@@ -202,7 +190,30 @@ public class MonkeysViewByValueAnimator extends View {
 			                       }
 		                       }
 		);
-		anim.setInterpolator(new AccelerateDecelerateInterpolator());
+		anim.addListener(new Animator.AnimatorListener() {
+			@Override
+			public void onAnimationStart(Animator animation) {
+
+			}
+
+			@Override
+			public void onAnimationEnd(Animator animation) {
+				if (slowMonkey == i) {
+					callback.onEnd();
+				}
+			}
+
+			@Override
+			public void onAnimationCancel(Animator animation) {
+
+			}
+
+			@Override
+			public void onAnimationRepeat(Animator animation) {
+
+			}
+		});
+		anim.setInterpolator(new LinearInterpolator());
 		long duration = (long) (speed *
 				(Math.abs(startY) + endY));
 		anim.setDuration(duration);
@@ -212,7 +223,11 @@ public class MonkeysViewByValueAnimator extends View {
 		}
 		anim.start();
 		animators[i] = anim;
-//		Log.i(TAG, i + "  Duration:" + anim.getDuration() + "   " + monkeys[i].toString());
+//		Logger.i(TAG, i + "  Duration:" + anim.getDuration() + "   " + monkeys[i].toString());
+	}
+
+	public interface Callback {
+		public void onEnd();
 	}
 
 	class PointEvaluator implements TypeEvaluator {
@@ -224,18 +239,9 @@ public class MonkeysViewByValueAnimator extends View {
 			int x = (int) (startPoint.getX() + fraction * (endPoint.getX() - startPoint.getX()));
 			int y = (int) (startPoint.getY() + fraction * (endPoint.getY() - startPoint.getY()));
 			Point point = new Point(x, y);
-//			Log.i(TAG, "evaluate: startPoint:" + startPoint);
 			return point;
 		}
 
-	}
-
-
-	class MyHandler extends Handler {
-		@Override
-		public void handleMessage(Message msg) {
-			invalidate();
-		}
 	}
 
 
@@ -260,6 +266,7 @@ public class MonkeysViewByValueAnimator extends View {
 					", endPoint=" + endPoint +
 					", speed=" + speed +
 					", isMove=" + isMove +
+					", width=" + width +
 					'}';
 		}
 
@@ -304,19 +311,27 @@ public class MonkeysViewByValueAnimator extends View {
 	}
 
 
-	public void startAnimation() {
-		cleanAnimation();
-		isShow.set(true);
-		init();
+	public void start(int imageId, Callback callback) {
+		clearAnimation();
+		MONKEY_MIN_WIDTH = 50 * view_width / 240;
+		MONKEY_MAX_WIDTH = 80 * view_width / 240;
+		bitmap_monkey = getMonkeyImage(MONKEY_MAX_WIDTH, imageId);
+		addRandomMonkey();
 		invalidate();
+		this.callback = callback;
 	}
 
-	public void cleanAnimation() {
+	public void clearAnimation() {
+		super.clearAnimation();
+		if (animators == null) {
+			return;
+		}
 		for (Animator animator : animators) {
-			if (animator != null) {
+			if (animator != null && animator.isRunning()) {
 				animator.end();
 			}
 		}
+		monkeys = null;
 	}
 
 	private int getRandomInt(int min, int max) {
@@ -338,11 +353,12 @@ public class MonkeysViewByValueAnimator extends View {
 
 	private void drawMonkey(Canvas canvas, int i) {
 		Monkey monkey = monkeys[i];
-		int left = monkey.startPoint.x - bitmap_monkey.getWidth() / 2;
-		int top = monkey.startPoint.y - bitmap_monkey.getHeight() / 2;
+		int left = (int) (monkey.startPoint.x - monkey.width / 2);
+		int top = monkey.startPoint.y;
+		int right = left + (int) monkey.width;
+		int bottom = (int) (top + (float) bitmap_monkey.getHeight() / (float) bitmap_monkey.getWidth() * monkey.width);
 //		canvas.drawBitmap(bitmap_monkey, left, top, mPaint);
-		Rect srcRect = new Rect();
-		Rect dstRect = new Rect(left, top, left + (int) monkey.width, top + (int) monkey.width);
+		Rect dstRect = new Rect(left, top, right, bottom);
 		canvas.drawBitmap(bitmap_monkey, null, dstRect, mPaint);
 //		Paint paint = new Paint();
 //		paint.setColor(Color.BLACK);
